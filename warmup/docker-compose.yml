@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  warmup:
+    build: .
+    ports:
+      - "9001:5000"   # Host:Container → now uses 8888
+    restart: always
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=10M

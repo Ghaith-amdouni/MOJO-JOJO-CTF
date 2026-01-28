@@ -1,0 +1,6 @@
+services:
+  ret2libc:
+    build: .
+    ports:
+      - "9002:5000"
+    restart: unless-stopped

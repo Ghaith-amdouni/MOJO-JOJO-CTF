@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  srop-piv:
+    build: .
+    ports:
+      - "9004:5000"  # Change host port if needed (e.g., 20000:9999 for pwn.red)
+    restart: always
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=10M
