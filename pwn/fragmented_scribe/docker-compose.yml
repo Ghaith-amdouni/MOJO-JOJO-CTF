@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  zero-day-scribe:
+    build: .
+    ports:
+      - "9005:1337"
+    restart: always
