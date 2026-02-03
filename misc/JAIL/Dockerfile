@@ -1,3 +1,26 @@
+# ============================================================================
+# STAGE 1: BUILD SECURE FLAG READER
+# ============================================================================
+FROM ubuntu:22.04 AS builder
+RUN apt-get update && apt-get install -y gcc libc6-dev
+RUN echo '#include <stdio.h>\n\
+    #include <stdlib.h>\n\
+    int main() {\n\
+    FILE *f = fopen("/opt/.secrets/flag.txt", "r");\n\
+    if (f == NULL) {\n\
+    perror("Error opening flag file");\n\
+    return 1;\n\
+    }\n\
+    char c;\n\
+    while ((c = fgetc(f)) != EOF) putchar(c);\n\
+    fclose(f);\n\
+    return 0;\n\
+    }' > flag_reader.c
+RUN gcc -O2 -static -o flag_reader flag_reader.c
+
+# ============================================================================
+# STAGE 2: FINAL CHALLENGE IMAGE
+# ============================================================================
 FROM ubuntu:22.04
 # Install ONLY what's absolutely necessary
 RUN apt-get update && apt-get install -y \
@@ -9,35 +32,25 @@ RUN apt-get update && apt-get install -y \
 # Create challenge user with rbash
 RUN useradd -m -s /bin/rbash ctfuser
 
-# ============================================================================
 # STEP 1: CREATE ALL DIRECTORIES AND FILES FIRST
-# ============================================================================
-# ONLY CHANGE: flag moved to /opt/.secrets/flag.txt
 RUN mkdir -p /opt/.secrets && \
-    echo "MOJO-JOJO{CURS3S!!_Y0u_unr4v3l3d_my_t4r_tr34ch3ry_4nd_st0l3_my_gl0ry!!}" > /opt/.secrets/flag.txt && \
-    chown -R ctfuser:ctfuser /opt/.secrets && \
-    chmod -R 755 /opt/.secrets && \
-    chmod 644 /opt/.secrets/flag.txt
+    echo "MOJO-JOJO{W0W_YOU_F0UND_IT_DO_YOU_WANT_A_B4NAN4_FOR_Y0UR_MEDIOCRE_EFFORT?!!}" > /opt/.secrets/flag.txt && \
+    # Flag is root-only! Forces the use of the SUID reader.
+    chown root:root /opt/.secrets/flag.txt && \
+    chmod 400 /opt/.secrets/flag.txt && \
+    chown root:root /opt/.secrets && \
+    chmod 700 /opt/.secrets
 
-# Decoys (unchanged)
-RUN echo "MOJO-JOJO{fake_flag_nice_try}" > /home/ctfuser/flag.txt && \
-    echo "MOJO-JOJO{tmp_trick?_ur_brain_is_smaller_than_my_pinkie}" > /tmp/flag.txt && \
-    echo "MOJO-JOJO{Mojo_Jojo_never_hides_his_masterpiece_in_plain_sight_fool!}" > /home/ctfuser/.flag
+# Sarcastic Decoys
+RUN echo "MOJO-JOJO{oh_look_at_me_im_hacking_a_fake_flag_so_pro}" > /home/ctfuser/flag.txt && \
+    echo "MOJO-JOJO{yup_this_is_totally_the_flag_keep_looking_here_forever}" > /tmp/flag.txt && \
+    echo "MOJO-JOJO{is_your_iq_equivalent_to_a_bowl_of_cereal?_look_deeper!}" > /home/ctfuser/.flag
 
-# Verify flag is readable by ctfuser
-RUN su - ctfuser -c "test -r /opt/.secrets/flag.txt" || (echo "ERROR: Flag not readable by ctfuser!" && exit 1)
+# Setup hidden bins directory
+RUN mkdir -p /opt/hidden_bins
 
-# Backup essential binaries BEFORE cleanup
-RUN mkdir -p /opt/system_bins /opt/hidden_bins && \
-    cp /bin/bash /opt/system_bins/bash && \
-    cp /bin/rbash /opt/system_bins/rbash && \
-    cp /bin/tar /opt/system_bins/tar && \
-    cp /bin/cat /opt/hidden_bins/flag_reader && \
-    chmod 755 /opt/hidden_bins/flag_reader && \
-    cp /bin/sh /opt/system_bins/sh && \
-    cp /bin/dash /opt/system_bins/dash 2>/dev/null || true
-
-
+# Copy the secure flag_reader from builder
+COPY --from=builder /flag_reader /opt/hidden_bins/flag_reader
 
 # Create empty jail directory and add tar symlink
 RUN mkdir -p /home/ctfuser/jail && \
@@ -70,51 +83,40 @@ RUN echo '#!/bin/bash' > /usr/local/bin/welcome.sh && \
     echo 'echo ""' >> /usr/local/bin/welcome.sh && \
     chmod +x /usr/local/bin/welcome.sh
 
-# ============================================================================
 # STEP 2: CONFIGURE RBASH
-# ============================================================================
 RUN echo '# Restricted Shell Configuration' > /home/ctfuser/.bashrc && \
     echo 'PATH=/home/ctfuser/jail' >> /home/ctfuser/.bashrc && \
     echo 'SHELL=/bin/rbash' >> /home/ctfuser/.bashrc && \
     echo 'set +o history' >> /home/ctfuser/.bashrc && \
     echo 'unset HISTFILE' >> /home/ctfuser/.bashrc && \
-    echo 'alias cd="echo cd: restricted"' >> /home/ctfuser/.bashrc
+    echo 'alias cd="echo cd: restricted"' >> /home/ctfuser/.bashrc && \
+    echo '# Restriction: Prohibit defining functions' >> /home/ctfuser/.bashrc && \
+    echo 'shopt -s expand_aliases' >> /home/ctfuser/.bashrc && \
+    echo 'alias function="echo Functions are disabled!"' >> /home/ctfuser/.bashrc && \
+    echo 'set +o braceexpand' >> /home/ctfuser/.bashrc && \
+    echo 'readonly -f' >> /home/ctfuser/.bashrc
 
 # Remove .profile and .bash_profile to prevent interference
 RUN rm -f /home/ctfuser/.profile /home/ctfuser/.bash_profile
 
-# ============================================================================
 # STEP 3: SET PERMISSIONS
-# ============================================================================
 RUN chown -R ctfuser:ctfuser /home/ctfuser && \
     chmod 755 /home/ctfuser && \
     chmod 755 /home/ctfuser/jail && \
-    chmod 700 /opt/.secrets && \
     chmod 755 /opt/hidden_bins
 
-# ============================================================================
-# STEP 4: REMOVE DANGEROUS BINARIES (carefully!)
-# ============================================================================
-RUN rm -f /etc/sudoers /etc/sudoers.d/* 2>/dev/null || true && \
-    find / -perm -4000 -type f -delete 2>/dev/null || true && \
-    find / -perm -2000 -type f -delete 2>/dev/null || true && \
-    rm -rf /usr/share/doc /usr/share/man /usr/share/info /var/lib/apt /var/cache/apt /etc/apt 2>/dev/null || true && \
-    cd /bin && ls -1 | grep -v -E '^(bash|rbash|tar|sh|dash)$' | xargs -r rm -f 2>/dev/null || true && \
-    cd /usr/bin && ls -1 | xargs -r rm -f 2>/dev/null || true && \
-    cd /sbin && ls -1 | xargs -r rm -f 2>/dev/null || true && \
-    cd /usr/sbin && ls -1 | xargs -r rm -f 2>/dev/null || true && \
-    cd /usr/local/bin && ls -1 | grep -v '^welcome.sh$' | xargs -r rm -f 2>/dev/null || true
+# STEP 4: CLEANUP AND VERIFY
+RUN find /usr/bin -type f -not -name bash -not -name rbash -not -name tar -not -name chown -not -name chmod -not -name rm -delete && \
+    find /usr/bin -type l -not -name bash -not -name rbash -not -name tar -not -name chown -not -name chmod -not -name rm -delete && \
+    rm -rf /usr/local/bin/* /usr/sbin/* /usr/share/doc /usr/share/man /usr/share/info /var/lib/apt /var/cache/apt /etc/apt 2>/dev/null || true && \
+    # Set SUID for the restricted reader AFTER cleanup find
+    chown root:root /opt/hidden_bins/flag_reader && \
+    chmod 4755 /opt/hidden_bins/flag_reader && \
+    rm /usr/bin/chown /usr/bin/chmod /usr/bin/rm && \
+    # Verify essential parts (No rm/ls/etc anymore)
+    [ -f /bin/bash ] && [ -f /bin/rbash ] && [ -f /bin/tar ] && [ -f /opt/hidden_bins/flag_reader ]
 
-# ============================================================================
-# VERIFY: Make sure bash, rbash, and tar still exist
-# ============================================================================
-RUN test -f /bin/bash || (echo "ERROR: bash missing!" && exit 1)
-RUN test -f /bin/rbash || (echo "ERROR: rbash missing!" && exit 1)
-RUN test -f /bin/tar || (echo "ERROR: tar missing!" && exit 1)
-
-# ============================================================================
 # LAUNCH
-# ============================================================================
 USER ctfuser
 WORKDIR /home/ctfuser
 CMD ["/bin/bash", "-c", "/usr/local/bin/welcome.sh && exec /bin/rbash"]
