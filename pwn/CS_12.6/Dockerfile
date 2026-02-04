@@ -21,9 +21,8 @@ RUN chown root:root challenge flag.txt && \
     chmod 444 flag.txt && \
     setcap -r challenge 2>/dev/null || true
 
-# Drop to non-privileged user
-USER ctfuser
+# Run with socat as root, it will drop to ctfuser per connection
 
 # Run with socat
 # Note: socat still runs as ctfuser, but executes challenge as ctfuser
-CMD ["socat", "TCP-LISTEN:1337,reuseaddr,fork", "EXEC:./challenge,su=ctfuser"]
+CMD ["socat", "-T60", "TCP-LISTEN:1337,reuseaddr,fork", "EXEC:./challenge,su=ctfuser,stderr"]
