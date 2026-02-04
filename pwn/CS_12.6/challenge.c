@@ -8,6 +8,19 @@
 volatile void (*_k_dispatch_table)(long, long, long) __attribute__((used));
 
 void _sys_maintenance(long a, long b, long c) {
+    // Dynamic filename encryption to prevent direct jump bypass
+    char f[] = "gm`f/uyu"; // "flag.txt" XOR 1
+    // Wait, let's re-calculate:
+    // f (0x66) ^ 1 = 0x67 (g)
+    // l (0x6c) ^ 1 = 0x6d (m)
+    // a (0x61) ^ 1 = 0x60 (`)
+    // g (0x67) ^ 1 = 0x66 (f)
+    // . (0x2e) ^ 1 = 0x2f (/)
+    // t (0x74) ^ 1 = 0x75 (u)
+    // x (0x78) ^ 1 = 0x79 (y)
+    // t (0x74) ^ 1 = 0x75 (u)
+    // Correct string: "gm`f/yuy"
+
     if (a != 0x1206 || b != 0x1161 || c != 0xcafebab) {
         printf("\x1b[31m[CRITICAL]\x1b[0m Unauthorized neural override detected. Vectors misaligned.\n");
         fflush(stdout);
@@ -18,7 +31,10 @@ void _sys_maintenance(long a, long b, long c) {
     printf("\x1b[32m[SYSTEM]\x1b[0m Bypassing security kernels... Initiating Core Dump...\n\n");
     fflush(stdout);
     
-    int fd = open("flag.txt", O_RDONLY);
+    // Decrypt filename using arguments. If jumping, f remains wrong.
+    for(int i=0; i<8; i++) f[i] ^= (unsigned char)((a ^ b ^ c ^ 0xcafe8cc ^ 1) & 0xFF);
+
+    int fd = open(f, O_RDONLY);
     if (fd < 0) {
         write(1, "[ERROR] Flag sector not found.\n", 31);
         exit(1);
@@ -54,8 +70,10 @@ __attribute__((naked)) void _proc_ctx() {
         "pop %rbp\n"
         "pop %r12\n"
         "pop %r13\n"
-        "pop %r14\n"
-        "pop %r15\n"
+        "mov (%rsp), %r14\n"
+        "add $8, %rsp\n"
+        "mov (%rsp), %r15\n"
+        "add $8, %rsp\n"
         "ret\n"
         "nop\n"
         "nop\n"
@@ -64,6 +82,7 @@ __attribute__((naked)) void _proc_ctx() {
         "mov %r14, %rdx\n"
         "mov %r13, %rsi\n"
         "mov %r12d, %edi\n"
+        "xor $0x1337, %rbx\n"
         "call *(%r15,%rbx,8)\n"
         "ret\n"
     );
