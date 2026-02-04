@@ -1,12 +1,8 @@
-# LAZY
+# MOJO_LAB
 
 **Description:** TOO LAZY FOR A DESCRIPTION
 
 **Category:** Pwn
 **Difficulty:** Hard
-**Author:** Antigravity
-
-## Deployment
-```bash
-docker-compose -f docker.yml up -d
-```
+**Author:** r3t0x"
+``
