@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create non-privileged user (no shell, no home directory)
+
 RUN useradd -r -s /bin/false -M ctfuser
 
 WORKDIR /challenge
@@ -19,7 +19,6 @@ COPY flag.txt .
 RUN chown root:root challenge flag.txt && \
     chmod 755 challenge && \
     chmod 444 flag.txt && \
-    # Ensure binary doesn't have dangerous capabilities
     setcap -r challenge 2>/dev/null || true
 
 # Drop to non-privileged user
