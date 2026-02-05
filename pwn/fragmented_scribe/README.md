@@ -5,10 +5,8 @@
 
 ## Description
 The scribe is dying. The message is breaking. 
-Only 100 fragments (bytes) remain. The language has been stripped of its direct commands (No Syscalls).
-The scribe accepts only the purest symbols (Printable ASCII 33-126).
-
 Can you piece together the fragment that writes history?
+**AUTHOR:r3t0x**
 
 **Constraints:**
 - Max 100 bytes of shellcode.
