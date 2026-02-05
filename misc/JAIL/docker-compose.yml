@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  jail:
+    build: .
+    container_name: jail_test
+    ports:
+      - "1338:1337"
+    read_only: true
+    tmpfs:
+      - /tmp:size=1M
+      - /run:size=1M
+      - /home/ctfuser/work:size=10M,uid=1000,gid=1000,mode=1777
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+          pids: 20
+    cap_drop:
+      - ALL
+    restart: always
