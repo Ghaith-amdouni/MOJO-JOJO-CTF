@@ -13,14 +13,11 @@ RUN useradd -m ctf
 WORKDIR /home/ctf
 
 # Copy challenge files
-COPY target.c .
+COPY target .
 COPY jail.py .
 COPY gdbinit .
 
-# Compile target
-# -no-pie: Easier to find addresses (though GDB resolves symbols anyway)
-# -g: Include debug info so GDB is nice to use
-RUN gcc -o target target.c -no-pie -g
+# No longer compiling inside Docker to match local environment exactly
 
 # Create flag
 # "do you know what gdb stands for go down bitch!!!!!!" -> Inspired flag

@@ -4,5 +4,8 @@ services:
     build: .
     ports:
       - "1339:1339"
-    privileged: true # Often needed for GDB to work correctly inside Docker (ptrace)
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
     restart: always
