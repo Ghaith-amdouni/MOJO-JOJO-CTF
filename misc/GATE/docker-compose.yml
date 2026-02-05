@@ -1,0 +1,8 @@
+version: '3'
+services:
+  gate:
+    build: .
+    ports:
+      - "1339:1339"
+    privileged: true # Often needed for GDB to work correctly inside Docker (ptrace)
+    restart: always
