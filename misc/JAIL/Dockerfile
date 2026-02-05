@@ -57,9 +57,12 @@ RUN mkdir -p /opt/hidden_bins
 # Copy the secure flag_reader from builder
 COPY --from=builder /flag_reader /opt/hidden_bins/flag_reader
 
-# Create empty jail directory and add tar symlink
+# Create empty jail directory and add tar symlink + stubs for clean startup
 RUN mkdir -p /home/ctfuser/jail && \
-    ln -s /bin/tar /home/ctfuser/jail/tar
+    ln -s /bin/tar /home/ctfuser/jail/tar && \
+    echo '#!/bin/sh' > /home/ctfuser/jail/groups && \
+    echo '#!/bin/sh' > /home/ctfuser/jail/locale-check && \
+    chmod +x /home/ctfuser/jail/groups /home/ctfuser/jail/locale-check
 
 # Create test files for tar
 RUN echo "Production backup data" > /home/ctfuser/testfile && \
@@ -92,6 +95,7 @@ RUN echo '#!/bin/bash' > /usr/bin/welcome.sh && \
 # STEP 2: CONFIGURE RBASH
 RUN echo 'if [ -f ~/.bashrc ]; then . ~/.bashrc; fi' > /home/ctfuser/.bash_profile && \
     echo 'if [[ "$0" == *rbash* ]]; then' > /home/ctfuser/.bashrc && \
+    echo '  /usr/bin/welcome.sh' >> /home/ctfuser/.bashrc && \
     echo '  export PATH=/home/ctfuser/jail' >> /home/ctfuser/.bashrc && \
     echo '  export PS1="rbash-jail:~\$ "' >> /home/ctfuser/.bashrc && \
     echo '  export SHELL=/bin/rbash' >> /home/ctfuser/.bashrc && \
@@ -126,8 +130,12 @@ RUN chown -R root:root /home/ctfuser && \
 
 # STEP 4: CLEANUP AND VERIFY
 RUN ln -sf /bin/bash /bin/sh && \
-    find /usr/bin -type f ! -name bash ! -name rbash ! -name tar ! -name sh ! -name dash ! -name find ! -name ls ! -name chown ! -name chmod ! -name rm ! -name socat ! -name welcome.sh ! -name env -delete && \
-    find /usr/bin -type l ! -name bash ! -name rbash ! -name tar ! -name sh ! -name dash ! -name find ! -name ls ! -name chown ! -name chmod ! -name rm ! -name socat ! -name welcome.sh ! -name env -delete && \
+    # Create dummies for missing shell commands
+    echo '#!/bin/sh' > /usr/bin/groups && \
+    echo '#!/bin/sh' > /usr/bin/locale-check && \
+    chmod +x /usr/bin/groups /usr/bin/locale-check && \
+    find /usr/bin -type f ! -name bash ! -name rbash ! -name tar ! -name sh ! -name dash ! -name find ! -name ls ! -name chown ! -name chmod ! -name rm ! -name socat ! -name welcome.sh ! -name env ! -name groups ! -name locale-check -delete && \
+    find /usr/bin -type l ! -name bash ! -name rbash ! -name tar ! -name sh ! -name dash ! -name find ! -name ls ! -name chown ! -name chmod ! -name rm ! -name socat ! -name welcome.sh ! -name env ! -name groups ! -name locale-check -delete && \
     rm -rf /usr/local/bin/* /usr/sbin/* /usr/share/doc /usr/share/man /usr/share/info /var/lib/apt /var/cache/apt /etc/apt 2>/dev/null || true && \
     # Set SUID for the restricted reader
     chown root:root /opt/hidden_bins/flag_reader && \
@@ -141,4 +149,4 @@ RUN ln -sf /bin/bash /bin/sh && \
 USER ctfuser
 WORKDIR /home/ctfuser
 EXPOSE 1337
-CMD ["socat", "-T120", "TCP-LISTEN:1337,reuseaddr,fork", "EXEC:\"/usr/bin/env -i PATH=/home/ctfuser/jail SHELL=/bin/rbash TERM=xterm /bin/bash -c '/usr/bin/welcome.sh && /bin/rbash --login'\",pty,stderr,sigint,setsid,sane"]
+CMD ["socat", "-T120", "TCP-LISTEN:1337,reuseaddr,fork", "EXEC:\"/usr/bin/env -i PATH=/home/ctfuser/jail SHELL=/bin/rbash TERM=xterm /bin/rbash --login\",pty,stderr,sigint,setsid,sane"]
