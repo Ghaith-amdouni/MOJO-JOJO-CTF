@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  hiphop-studio:
+    build: .
+    ports:
+      - "9008:9008"
+    restart: always
+    container_name: hiphop_studio

@@ -8,7 +8,7 @@ context.arch = 'amd64'
 # ═══════════════════════════════════════
 binary = './main'
 elf = ELF(binary)
-p = remote('localhost',9003)
+p = remote('4.233.210.175',9003)
 
 # ═══════════════════════════════════════
 # Gadgets (from your objdump output)

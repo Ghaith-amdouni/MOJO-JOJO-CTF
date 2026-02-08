@@ -9,7 +9,7 @@ if len(sys.argv) > 2:
     r = remote(sys.argv[1], int(sys.argv[2]))
 else:
     # Default to local docker if running locally
-    r = remote('localhost', 1337)
+    r = remote('4.233.210.175', 1337)
 
 def solve():
     # Read Header - Updated for Bodreya Theme

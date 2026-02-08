@@ -40,7 +40,7 @@ def solve():
 
     print("\n=== REMOTE VERIFICATION ===")
     try:
-        r_remote = remote('localhost', 1339)
+        r_remote = remote('4.233.210.175', 1339)
         remote_res = run_exploit(r_remote, "REMOTE")
     except Exception as e:
         log.error(f"Could not connect to remote: {e}")

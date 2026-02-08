@@ -12,7 +12,7 @@ def start(argv=[], *a, **kw):
     if args.GDB:
         return gdb.debug([binary] + argv, gdbscript=gdbscript, *a, **kw)
     elif args.REMOTE:
-        return remote(args.HOST or 'localhost', args.PORT or 9004, *a, **kw)
+        return remote(args.HOST or '4.233.210.175', args.PORT or 9004, *a, **kw)
     else:
         return process([binary] + argv, *a, **kw)
 

@@ -68,7 +68,7 @@ if __name__ == '__main__':
     if args.REMOTE:
         host = args.HOST or 'localhost'
         port = int(args.PORT or 2711)
-        io = remote(host, port)
+        io = remote('4.233.210.175',9002)
     else:
         io = process(binary)
 

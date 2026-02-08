@@ -6,7 +6,7 @@ context.binary = binary = ELF('./main')
 context.log_level = 'info'
 
 if args.REMOTE:
-    host = args.HOST or 'localhost'
+    host = args.HOST or '4.233.210.175'
     port = int(args.PORT or 9007)
     p = remote(host, port)
 else:

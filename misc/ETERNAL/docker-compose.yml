@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  backtracking-oracle:
+    build: .
+    ports:
+      - "9011:1340"
+    restart: always

@@ -1,0 +1,10 @@
+version: '3'
+services:
+  absolute_zero:
+    build: .
+    ports:
+      - "9010:1337"
+    cap_add:
+      - SYS_PTRACE # Optional, for debugging if needed, but not required for run
+    security_opt:
+      - seccomp:unconfined # Let the binary handle its own seccomp

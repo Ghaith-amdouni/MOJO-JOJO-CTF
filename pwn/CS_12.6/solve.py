@@ -4,7 +4,7 @@ context.binary = b = ELF('./challenge', checksec=False)
 
 def get_io():
     if args.REMOTE:
-        return remote(args.HOST or 'localhost', int(args.PORT or 9006))
+        return remote(args.HOST or '4.233.210.175', int(args.PORT or 9006))
     return process(b.path)
 
 # Single connection for Leak + Exploit (Canary is process-specific)
