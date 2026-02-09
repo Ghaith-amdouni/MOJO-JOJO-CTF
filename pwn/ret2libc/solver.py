@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 from pwn import *
 
-# Configuration
 binary = './main'
 libc_path = './libc.so.6'
 
-# Gadgets and offsets
 POP_RDI = 0x40114a
 RET = 0x40114b
 OFFSET = 72
